@@ -12,6 +12,8 @@ class AuthService {
   /// Simulasi database pengguna
   final List<User> _users = const [
     User(username: 'admin', password: '1234'),
+    User(username: 'wahyu', password: '033'),
+    User(username: 'vincent', password: '144'),
   ];
 
   User? _currentUser;
