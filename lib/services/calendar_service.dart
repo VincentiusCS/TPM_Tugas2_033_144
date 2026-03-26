@@ -43,7 +43,14 @@ class CalendarService {
     int y = tahun + 4800 - a;
     int m = bulan + 12 * a - 3;
 
-    int jdn = hari + (153 * m + 2) ~/ 5 + 365 * y + y ~/ 4 - y ~/ 100 + y ~/ 400 - 32045;
+    int jdn =
+        hari +
+        (153 * m + 2) ~/ 5 +
+        365 * y +
+        y ~/ 4 -
+        y ~/ 100 +
+        y ~/ 400 -
+        32045;
 
     // Weton adalah JDN mod 5
     int wetonIndex = jdn % 5;
