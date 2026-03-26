@@ -9,6 +9,9 @@ import 'bilangan_page.dart';
 import 'jumlah_total_page.dart';
 import 'stopwatch_page.dart';
 import 'pyramid_page.dart';
+import 'weton_hari_page.dart';
+import 'usia_page.dart';
+import 'year_converter_page.dart';
 
 /// Halaman utama dengan grid menu
 class HomePage extends StatelessWidget {
@@ -51,6 +54,24 @@ class HomePage extends StatelessWidget {
       icon: Icons.change_history,
       color: AppColors.primary,
       page: const PyramidPage(),
+    ),
+    MenuItem(
+      title: 'Cek Hari & Weton',
+      icon: Icons.calendar_today,
+      color: Colors.lightBlue,
+      page: const WetonHariPage(),
+    ),
+    MenuItem(
+      title: 'Cek Usia',
+      icon: Icons.cake,
+      color: Colors.pink,
+      page: const UsiaPage(),
+    ),
+    MenuItem(
+      title: 'Konversi Tahun',
+      icon: Icons.date_range,
+      color: Colors.indigo,
+      page: const YearConverterPage(),
     ),
   ];
 
