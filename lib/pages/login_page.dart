@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
 import 'home_page.dart';
+import 'register_page.dart';
 
 /// Halaman Login
-/// Menggunakan AuthService (Dependency Injection via constructor)
+/// Terhubung ke backend REST API via AuthService
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -19,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _obscure = true;
   String? _errorMsg;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -27,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     final username = _usernameCtrl.text.trim();
     final password = _passwordCtrl.text;
 
@@ -36,15 +38,30 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    final berhasil = _authService.login(username, password);
+    setState(() {
+      _isLoading = true;
+      _errorMsg = null;
+    });
 
-    if (berhasil) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-    } else {
-      setState(() => _errorMsg = 'Username atau password salah!');
+    try {
+      final result = await _authService.login(username, password);
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      } else {
+        setState(() => _errorMsg = result['message'] ?? 'Login gagal');
+      }
+    } catch (e) {
+      setState(() => _errorMsg = 'Error: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -56,14 +73,20 @@ class _LoginPageState extends State<LoginPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(32),
           child: Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             elevation: 8,
             child: Padding(
               padding: const EdgeInsets.all(32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.lock_rounded, size: 64, color: AppColors.primary),
+                  const Icon(
+                    Icons.lock_rounded,
+                    size: 64,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(height: 12),
                   const Text(
                     'Login',
@@ -71,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Username: admin  |  Password: 1234',
+                    'Silahkan Login untuk melanjutkan',
                     style: TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                   const SizedBox(height: 28),
@@ -82,21 +105,27 @@ class _LoginPageState extends State<LoginPage> {
                       prefixIcon: Icon(Icons.person),
                       border: OutlineInputBorder(),
                     ),
+                    enabled: !_isLoading,
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _passwordCtrl,
                     obscureText: _obscure,
-                    onSubmitted: (_) => _handleLogin(),
+                    onSubmitted: _isLoading ? null : (_) => _handleLogin(),
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () => setState(() => _obscure = !_obscure),
+                        icon: Icon(
+                          _obscure ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: _isLoading
+                            ? null
+                            : () => setState(() => _obscure = !_obscure),
                       ),
                     ),
+                    enabled: !_isLoading,
                   ),
                   if (_errorMsg != null) ...[
                     const SizedBox(height: 12),
@@ -114,11 +143,52 @@ class _LoginPageState extends State<LoginPage> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      onPressed: _handleLogin,
-                      child: const Text('Masuk', style: TextStyle(fontSize: 16)),
+                      onPressed: _isLoading ? null : _handleLogin,
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text('Masuk', style: TextStyle(fontSize: 16)),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Belum punya akun? ',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                      GestureDetector(
+                        onTap: _isLoading
+                            ? null
+                            : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterPage(),
+                                ),
+                              ),
+                        child: Text(
+                          'Daftar di sini',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
